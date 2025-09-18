@@ -1,0 +1,17 @@
+# ROS 2 build folders
+build/
+install/
+log/
+
+# Python virtual environment & cache
+myvenv/
+pc_venv/
+__pycache__/
+*.pyc
+
+# Generated files from our scripts
+encodings.pkl
+vision_log.csv
+
+# IDE files
+.vscode/
