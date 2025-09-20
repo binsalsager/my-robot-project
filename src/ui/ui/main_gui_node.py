@@ -194,12 +194,23 @@ class MainGuiNode(Node):
         self.root.after(0, lambda: self.vision_label.config(text=f"Vision: [{msg.data}]"))
 
     def update_video(self):
+        """
+        This function is called periodically to update the video feed in the GUI.
+        It now ONLY displays the latest frame received from the video_callback.
+        """
         if self.latest_frame is not None:
-            frame = cv2.cvtColor(self.latest_frame, cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(frame, (640, 480))
-            imgtk = ImageTk.PhotoImage(image=PILImage.fromarray(frame))
-            self.video_label.imgtk = imgtk
-            self.video_label.config(image=imgtk)
+            try:
+                # Convert the frame (which is already a cv2 image) to a format Tkinter can use
+                rgb_display = cv2.cvtColor(self.latest_frame, cv2.COLOR_BGR2RGB)
+                imgtk = ImageTk.PhotoImage(image=PILImage.fromarray(rgb_display))
+
+                # Update the label with the new image
+                self.video_label.imgtk = imgtk
+                self.video_label.config(image=imgtk)
+            except Exception as e:
+                self.get_logger().error(f"GUI Error updating video frame: {e}", throttle_duration_sec=5)
+
+        # Schedule this function to run again after 30ms
         self.root.after(30, self.update_video)
 
 def main(args=None):

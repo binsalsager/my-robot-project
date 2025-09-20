@@ -10,7 +10,7 @@ class CameraPublisher(Node):
         self.publisher_ = self.create_publisher(Image, '/video_feed', 10)
         timer_period = 1.0 / 30.0
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(None)
         if not self.cap.isOpened():
             self.get_logger().error("Could not open video capture device at index 0.")
             rclpy.shutdown()

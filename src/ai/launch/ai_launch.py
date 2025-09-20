@@ -13,7 +13,10 @@ def generate_launch_description():
             package='ai',
             executable='vision_node',
             name='vision_node',
-            output='screen'
+            output='screen',
+            parameters=[
+                {'model_set': 'A'}  # Change 'A' to 'B' to test the new models
+            ]
         ),
         Node(
             package='ai',

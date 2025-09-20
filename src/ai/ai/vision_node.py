@@ -18,6 +18,10 @@ class VisionNode(Node):
     """
     def __init__(self):
         super().__init__('vision_node')
+        self.declare_parameter('model_set', 'A')  # Default to 'A'
+        self.model_set = self.get_parameter('model_set').get_parameter_value().string_value
+        self.get_logger().info(f"--- Using Model Set: '{self.model_set}' ---")
+
         
         # --- Subscribers and Publishers ---
         self.subscription = self.create_subscription(Image, '/video_feed', self.video_callback, 10)
@@ -75,7 +79,14 @@ class VisionNode(Node):
 
         rgb_small_frame = cv2.cvtColor(cv2.resize(frame, (0, 0), fx=0.5, fy=0.5), cv2.COLOR_BGR2RGB)
 
-        face_locations = face_recognition.face_locations(rgb_small_frame)
+    # --- NEW: Logic to switch between models ---
+        if self.model_set == 'B':
+            # MODEL SET B: Slower but more accurate CNN face detector
+            face_locations = face_recognition.face_locations(rgb_small_frame, model='cnn')
+        else:
+        # MODEL SET A: Faster HoG face detector (our original)
+            face_locations = face_recognition.face_locations(rgb_small_frame)
+
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
         person_currently_present = bool(face_locations)
@@ -89,15 +100,17 @@ class VisionNode(Node):
         for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
             matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding)
             name = "Person"
-            
+
             face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
             if len(face_distances) > 0:
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     name = self.known_face_names[best_match_index]
-            
+
             emotion = "N/A"
             try:
+            # For this comparison, we will use the same emotion model for both,
+            # as changing the face detector is the more significant variable.
                 face_roi = rgb_small_frame[top:bottom, left:right]
                 analysis = DeepFace.analyze(face_roi, actions=['emotion'], enforce_detection=False)
                 emotion = analysis[0]['dominant_emotion']
